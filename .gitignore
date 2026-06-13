@@ -1,0 +1,125 @@
+# ============================================================
+# WinBet Hermes Profile — .gitignore
+# ============================================================
+# Questo è un PROFILO HERMES (distribuzione), non un'app.
+# File esclusi:
+#  - Secrets, credenziali, state DB, cache runtime
+#  - Binari e node_modules scaricati localmente
+#  - Dati personali (chat_id Telegram, history, memories)
+#  - Workspace volatili
+# ============================================================
+
+# --- Secrets & credentials (MAI committare) ---
+.env
+.env.*
+auth.json
+auth.lock
+
+# --- State DB & runtime (per-machine, rigenerato) ---
+state.db
+state.db-shm
+state.db-wal
+sessions/
+logs/
+gateway.pid
+gateway.lock
+gateway_state.json
+context_length_cache.yaml
+models_dev_cache.json
+provider_models_cache.json
+ollama_cloud_models_cache.json
+.hermes_history
+.skills_prompt_snapshot.json
+.update_check
+.clean_shutdown
+channel_directory.json
+.tmp/
+
+# --- Personal / volatile (contiene chat_id Telegram personale) ---
+memories/
+workspace/
+home/
+pairing/
+hooks/
+plans/
+audio_cache/
+image_cache/
+images/
+cache/
+local/
+bin/
+
+# --- Backup files ---
+*.bak
+*.bak.*
+config.yaml.bak.*
+
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+.python-version
+
+# --- Node (lsp/, scripts/ se presente) ---
+lsp/
+node_modules/
+package-lock.json
+npm-debug.log
+yarn-error.log
+
+# --- Editor / OS ---
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# --- Cron runtime ---
+cron/.tick.lock
+cron/output/
+
+# --- Pastes (input utente, transienti) ---
+pastes/
+
+# --- Hermes skills runtime state (rigenerato al primo /reload-skills) ---
+skills/.bundled_manifest
+skills/.curator_state
+skills/.usage.json
+skills/.usage.json.lock
+skills/.curator_state.lock
+
+# ============================================================
+# SKILL BUNDLED
+# ============================================================
+# Le skill bundled vengono rigenerate al primo `/reload-skills`.
+# Decommenta SOLO se vuoi committare la copia locale (aumenta
+# il repo di ~5-10 MB e rischi drift rispetto al core Hermes).
+# Default: ESCLUSE.
+
+# skills/apple/
+# skills/creative/
+# skills/mlops/
+# skills/devops/
+# skills/email/
+# skills/github/
+# skills/media/
+# skills/note-taking/
+# skills/productivity/
+# skills/research/
+# skills/smart-home/
+# skills/social-media/
+# skills/software-development/
+# skills/data-science/
+# skills/dogfood/
+# skills/yuanbao/
+# skills/autonomous-ai-agents/
+# skills/bookmaker-odds-scraper/
+# skills/dedupe-matches-merge/
+# skills/github-push-with-pat-from-env/
+# skills/libero-email-notifier/
+# skills/python-project-replication-package/

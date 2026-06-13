@@ -1,0 +1,193 @@
+#!/usr/bin/env python3
+"""
+WinBet Match Dedup & Merge Template — Unisce partite duplicate da fonti diverse.
+
+TEMPLATE: copiare in execution/dedupe_matches.py del proprio progetto e adattare:
+- DB_PATH (path al database SQLite)
+- LEAGUE_EQUIVALENCES (mappa leghe non canoniche -> canoniche)
+- TEAM_NORMALIZE (mappa nomi squadra localizzati -> canonici)
+
+Uso:
+    python3 execution/dedupe_matches.py [--dry-run] [--backup]
+"""
+# /// script
+# requires-python = ">=3.10"
+# dependencies = []
+# ///
+
+from __future__ import annotations
+
+import argparse
+import shutil
+import sqlite3
+import sys
+from collections import defaultdict
+from pathlib import Path
+
+# === CONFIGURAZIONE DA ADATTARE ===
+DB_PATH = Path(__file__).resolve().parent.parent / "<nome_db>.db"
+BACKUP_PATH = Path("/tmp/<nome>_pre_merge.db")
+
+LEAGUE_EQUIVALENCES = {
+    # "<nome_lega_non_canonica>": "<nome_lega_canonica>",
+    # esempi tipici:
+    # "Amichevoli Internazionali": "Amichevoli Nazionali",
+    # "Mondiali 2026": "FIFA World Cup",
+}
+
+TEAM_NORMALIZE = {
+    # IT/EN o tra localizzazioni diverse
+    # "messico": "mexico", "sudafrica": "south africa",
+}
+
+MARKET_NORMALIZE = {
+    # "1x2": "1X2", "gol_nogol": "GG/NG", "U/O GOAL 2.5": "OU25",
+}
+
+
+def normalize_team(name: str) -> str:
+    n = name.strip().lower()
+    n = n.replace("'", "").replace("'", "").replace("`", "")
+    n = " ".join(n.split())
+    return TEAM_NORMALIZE.get(n, n)
+
+
+def find_duplicates(conn) -> dict:
+    c = conn.cursor()
+    c.execute("SELECT match_id, league_id, home_team, away_team, match_date, match_time FROM matches")
+    groups = defaultdict(list)
+    for m in c.fetchall():
+        h = normalize_team(m[2])
+        a = normalize_team(m[3])
+        league_canon = LEAGUE_EQUIVALENCES.get(m[1], m[1])
+        key = (h, a, m[4], league_canon)
+        groups[key].append(m)
+    return {k: v for k, v in groups.items() if len(v) > 1}
+
+
+def merge_group(c, matches: list) -> tuple:
+    """Merge di un gruppo. Ritorna (n_odds_added, n_deleted, canonical_id)."""
+    counts = []
+    for m in matches:
+        c.execute("SELECT COUNT(*) FROM odds WHERE match_id = ?", (m[0],))
+        counts.append((m[0], c.fetchone()[0], m))
+    counts.sort(key=lambda x: -x[1])
+    canonical_id, _, canonical_match = counts[0]
+    canonical_league = LEAGUE_EQUIVALENCES.get(canonical_match[1], canonical_match[1])
+    duplicates_ids = [x[0] for x in counts[1:]]
+
+    if canonical_match[1] != canonical_league:
+        c.execute("UPDATE matches SET league_id = ? WHERE match_id = ?",
+                  (canonical_league, canonical_id))
+
+    n_odds = 0
+    for dup_id in duplicates_ids:
+        c.execute("""SELECT bookmaker_id, market_type, selection_name, selection_label,
+                     odds_value, odds_decimal, scraped_at, updated_at
+                     FROM odds WHERE match_id = ?""", (dup_id,))
+        for odd in c.fetchall():
+            bookmaker, market, sel_name, sel_label, odds_val, odds_dec, scraped, updated = odd
+            c.execute("""SELECT id, odds_decimal FROM odds
+                         WHERE match_id = ? AND bookmaker_id = ? AND market_type = ?
+                           AND selection_name = ?""",
+                      (canonical_id, bookmaker, market, sel_name))
+            ex = c.fetchone()
+            if ex:
+                ex_id, ex_dec = ex
+                if odds_dec and ex_dec and odds_dec > ex_dec:
+                    c.execute("UPDATE odds SET odds_decimal = ? WHERE id = ?", (odds_dec, ex_id))
+            else:
+                c.execute("""INSERT INTO odds (match_id, bookmaker_id, market_type, selection_name,
+                              selection_label, odds_value, odds_decimal, scraped_at, updated_at)
+                             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                          (canonical_id, bookmaker, market, sel_name, sel_label,
+                           odds_val, odds_dec, scraped, updated))
+                n_odds += 1
+
+        # Cleanup
+        c.execute("DELETE FROM odds WHERE match_id = ?", (dup_id,))
+        c.execute("DELETE FROM odds_history WHERE match_id = ?", (dup_id,))  # ⚠️ schema-dependent
+        c.execute("DELETE FROM matches WHERE match_id = ?", (dup_id,))
+
+    return n_odds, len(duplicates_ids), canonical_id
+
+
+def normalize_markets(c) -> int:
+    """Seconda passata: normalizza market_type. Ritorna n aggiornati."""
+    n_total = 0
+    for old, new in MARKET_NORMALIZE.items():
+        if old == new: continue
+        c.execute("SELECT id, match_id, bookmaker_id, selection_name, odds_decimal "
+                  "FROM odds WHERE market_type = ?", (old,))
+        rows = c.fetchall()
+        for row in rows:
+            oid, mid, bm, sel, dec = row
+            c.execute("""SELECT id, odds_decimal FROM odds
+                         WHERE match_id = ? AND bookmaker_id = ? AND market_type = ?
+                           AND selection_name = ?""",
+                      (mid, bm, new, sel))
+            ex = c.fetchone()
+            if ex:
+                ex_id, ex_dec = ex
+                if dec and ex_dec and dec > ex_dec:
+                    c.execute("UPDATE odds SET odds_decimal = ? WHERE id = ?", (dec, ex_id))
+                c.execute("DELETE FROM odds WHERE id = ?", (oid,))
+            else:
+                c.execute("UPDATE odds SET market_type = ? WHERE id = ?", (new, oid))
+                n_total += 1
+    return n_total
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description="Deduplica & merge partite duplicate")
+    parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument("--backup", action="store_true")
+    args = parser.parse_args()
+
+    if not DB_PATH.exists():
+        print(f"❌ Database non trovato: {DB_PATH}")
+        return 1
+
+    if args.backup and not args.dry_run:
+        shutil.copy(DB_PATH, BACKUP_PATH)
+        print(f"📦 Backup: {BACKUP_PATH}")
+
+    conn = sqlite3.connect(DB_PATH)
+    c = conn.cursor()
+
+    print("🔍 Ricerca duplicati...")
+    duplicates = find_duplicates(conn)
+    if not duplicates:
+        print("✅ Nessun duplicato.")
+        return 0
+
+    print(f"📊 {len(duplicates)} gruppi da fondere")
+    if args.dry_run:
+        for k, v in duplicates.items():
+            print(f"  {k[0]} vs {k[1]} ({k[2]}) — {len(v)} record")
+        return 0
+
+    total_odds = 0
+    total_deleted = 0
+    for matches in duplicates.values():
+        try:
+            n_odds, n_del, _ = merge_group(c, matches)
+            total_odds += n_odds
+            total_deleted += n_del
+        except Exception as e:
+            print(f"❌ Errore: {e}")
+            conn.rollback()
+            return 1
+
+    # Seconda passata: normalizza market_type
+    print("🔄 Normalizzazione market_type...")
+    n_norm = normalize_markets(c)
+
+    conn.commit()
+    conn.close()
+    print(f"✅ Quote aggiunte: {total_odds}, partite eliminate: {total_deleted}, mercati normalizzati: {n_norm}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())

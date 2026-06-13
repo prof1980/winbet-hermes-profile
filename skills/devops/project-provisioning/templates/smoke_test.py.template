@@ -1,0 +1,121 @@
+#!/usr/bin/env python3
+"""Project smoke-test template — copy, customize, run.
+
+Drop this into /tmp/<project>_smoke.py, edit the PROJECT/PYTHON/MODULES/
+EXPECTED_TABLES blocks for your project, and run. Returns exit 0 only
+if every check passes — use as a gate before declaring production-ready.
+"""
+import os, sys, json, sqlite3, subprocess
+
+# === EDIT THESE FOR YOUR PROJECT ===
+PROJECT = "/path/to/project"
+PYTHON = f"{PROJECT}/venv/bin/python"
+
+# Modules that MUST import without error. Add the project-specific ones.
+MODULES_TO_IMPORT = [
+    "scraper", "dashboard", "db_init", "dedupe_matches",
+    "surebet_detector", "notifications",
+]
+
+# Main entry point to dry-run, with its args. Set to None to skip.
+DRY_RUN_CMD = [PYTHON, "execution/main.py", "--dry-run"]
+DRY_RUN_TIMEOUT = 30
+
+# DB tables that MUST exist after init. Set to None to skip DB check.
+DB_PATH = f"{PROJECT}/data.db"
+EXPECTED_TABLES = {"matches", "odds", "scrape_log"}
+
+# === END CONFIG ===
+
+os.chdir(PROJECT)
+results = []
+
+
+def check(name, ok, detail=""):
+    results.append((ok, name, detail))
+    icon = "OK" if ok else "FAIL"
+    msg = f"[{icon}] {name}"
+    if detail:
+        msg += f" — {detail}"
+    print(msg)
+
+
+# 1. venv runs
+try:
+    out = subprocess.check_output([PYTHON, "--version"], text=True).strip()
+    check("venv executable", True, out)
+except Exception as e:
+    check("venv executable", False, str(e))
+    print("venv missing — run: uv venv venv --python 3.13")
+    sys.exit(1)
+
+# 2. Modules import
+sys.path.insert(0, PROJECT)  # or PROJECT/execution, depending on layout
+import_errors = []
+for m in MODULES_TO_IMPORT:
+    try:
+        __import__(m)
+        check(f"import {m}", True)
+    except Exception as e:
+        import_errors.append((m, str(e)[:100]))
+        check(f"import {m}", False, str(e)[:100])
+if import_errors:
+    print("  hint: missing paths/hardcoded paths? see project-provisioning skill")
+
+# 3. .env present, perms 600, gitignored
+env = f"{PROJECT}/.env"
+if os.path.exists(env):
+    perms = oct(os.stat(env).st_mode)[-3:]
+    check(".env perms 600", perms == "600", f"perms={perms}")
+    r = subprocess.run(["git", "check-ignore", "-v", ".env"],
+                       cwd=PROJECT, capture_output=True, text=True)
+    check(".env gitignored", r.returncode == 0,
+          r.stdout.split('\n')[0] if r.returncode == 0 else "NOT IGNORED — security risk")
+else:
+    check(".env present", False, "missing — copy from .env.example")
+
+# 4. DB schema
+if DB_PATH and EXPECTED_TABLES:
+    if os.path.exists(DB_PATH):
+        conn = sqlite3.connect(DB_PATH)
+        tables = {r[0] for r in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+        ).fetchall()}
+        conn.close()
+        missing = EXPECTED_TABLES - tables
+        check("DB schema complete", not missing,
+              f"missing: {sorted(missing)}" if missing else
+              f"all {len(EXPECTED_TABLES)} expected tables present")
+    else:
+        check("DB initialized", False, f"{DB_PATH} not found — run db_init")
+
+# 5. Hardcoded path residue check
+r = subprocess.run(
+    ["grep", "-rln", "/mnt/c/Users", f"{PROJECT}/execution/"],
+    capture_output=True, text=True
+)
+residue = r.stdout.strip()
+check("no /mnt/c/Users/ paths in execution/*.py",
+      residue == "",
+      f"found in: {residue.splitlines()[0]}" if residue else "clean")
+
+# 6. Dry-run main
+if DRY_RUN_CMD:
+    try:
+        r = subprocess.run(DRY_RUN_CMD, capture_output=True, text=True,
+                           timeout=DRY_RUN_TIMEOUT)
+        check("main --dry-run", r.returncode == 0,
+              f"{len(r.stdout)} chars output" if r.returncode == 0
+              else f"stderr: {r.stderr[:100]}")
+    except subprocess.TimeoutExpired:
+        check("main --dry-run", False, f"timeout after {DRY_RUN_TIMEOUT}s")
+    except Exception as e:
+        check("main --dry-run", False, str(e))
+
+# Summary
+ok = sum(1 for r, *_ in results if r)
+fail = sum(1 for r, *_ in results if not r)
+print(f"\n{'=' * 60}")
+print(f"{ok} OK, {fail} FAIL out of {len(results)} checks")
+print(f"{'=' * 60}")
+sys.exit(0 if fail == 0 else 1)

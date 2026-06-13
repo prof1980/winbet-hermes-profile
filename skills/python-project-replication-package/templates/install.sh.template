@@ -1,0 +1,91 @@
+#!/bin/bash
+# install.sh — Standard Python project install template.
+# Copy this into a new project, edit the variables, ship.
+#
+# Customize:
+#   1. PROJECT_NAME — display name shown to user
+#   2. PYTHON_MIN   — minimum Python version (default 3.10)
+#   3. POST_INSTALL — extra steps after pip (e.g. `playwright install chromium`)
+#   4. TEST_CMD     — quick smoke test to suggest to the user
+#
+# Idempotent: safe to re-run. Skips venv creation if it already exists.
+set -e
+
+PROJECT_NAME="$(basename "$(pwd)")"
+PYTHON_MIN="3.10"
+POST_INSTALL=(
+    # "playwright install chromium"   # uncomment if project uses Playwright
+)
+TEST_CMD="./venv/bin/python -c 'import sys; print(f\"{sys.version_info[:2]} OK\")'"
+
+echo "=================================================="
+echo "  ${PROJECT_NAME} - Installazione"
+echo "=================================================="
+
+# 1. Check Python
+PYTHON_BIN="$(command -v python3)"
+if [ -z "$PYTHON_BIN" ]; then
+    echo "❌ python3 non trovato. Installa Python ${PYTHON_MIN}+"
+    exit 1
+fi
+PY_VERSION="$($PYTHON_BIN -c 'import sys; print("%d.%d" % sys.version_info[:2])')"
+echo "[1/5] Python ${PY_VERSION} trovato"
+
+# 2. Create venv
+if [ ! -d "venv" ]; then
+    echo "[2/5] Creazione ambiente virtuale..."
+    $PYTHON_BIN -m venv venv
+else
+    echo "[2/5] venv già esistente, skip"
+fi
+source venv/bin/activate
+
+# 3. Install dependencies
+echo "[3/5] Installazione dipendenze Python..."
+pip install --upgrade pip --quiet
+if [ -f "requirements.txt" ]; then
+    pip install -r requirements.txt --quiet
+else
+    echo "   ⚠ requirements.txt non trovato, skip"
+fi
+
+# 4. Post-install steps (browsers, etc.)
+echo "[4/5] Post-install steps..."
+for cmd in "${POST_INSTALL[@]}"; do
+    if [ -n "$cmd" ]; then
+        echo "   → $cmd"
+        eval "$cmd"
+    fi
+done
+
+# 5. .env from example
+if [ ! -f ".env" ]; then
+    if [ -f ".env.example" ]; then
+        echo "[5/5] Creazione .env da .env.example..."
+        cp .env.example .env
+        chmod 600 .env
+        echo "  ⚠ IMPORTANTE: edita .env con le tue credenziali!"
+        echo "    nano .env"
+    else
+        echo "[5/5] .env.example non trovato, skip"
+    fi
+else
+    echo "[5/5] .env già esistente, skip"
+fi
+
+# Create output directories
+mkdir -p .tmp logs
+
+# Smoke test
+echo ""
+echo "=================================================="
+echo "  ✅ Installazione completata!"
+echo "=================================================="
+echo ""
+echo "Smoke test:"
+eval "$TEST_CMD" 2>&1 || echo "  (smoke test fallito ma l'install è OK)"
+echo ""
+echo "Prossimi passi:"
+echo "  1. Configura le credenziali:  nano .env"
+echo "  2. Esegui uno script di test:  vedi README.md"
+echo ""

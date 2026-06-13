@@ -1,0 +1,375 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "description": "Configurazione bookmaker per odds scraping. Aggiornare selettori e pattern quando i siti cambiano.",
+    "last_updated": "2026-05-25"
+  },
+  "snai": {
+    "name": "SNAI",
+    "enabled": true,
+    "base_url": "https://www.snai.it",
+    "sport_paths": {
+      "calcio": "/scommesse-sportive/calcio"
+    },
+    "competition_paths": {
+      "serie-a": "/italia/serie-a",
+      "champions-league": "/champions-league",
+      "serie-b": "/italia/serie-b",
+      "premier-league": "/inghilterra/premier-league",
+      "la-liga": "/spagna/la-liga",
+      "bundesliga": "/germania/bundesliga",
+      "ligue-1": "/francia/ligue-1"
+    },
+    "strategies": [
+      "api_intercept",
+      "dom_parse"
+    ],
+    "api_patterns": [
+      "*/sport/*",
+      "*/prematch*",
+      "*/api/*",
+      "*/scommesse*",
+      "*odds*",
+      "*quota*",
+      "*event*",
+      "*match*"
+    ],
+    "selectors": {
+      "event_container": ".event-list, .events-container, [class*='event-list'], [class*='match-list']",
+      "event_row": "[class*='event-row'], [class*='match-row'], [data-event-id], [class*='EventRow'], tr[class*='event']",
+      "home_team": "[class*='home'], [class*='team-1'], [class*='team1'], .home-team, [class*='Home']",
+      "away_team": "[class*='away'], [class*='team-2'], [class*='team2'], .away-team, [class*='Away']",
+      "odds": "[class*='quota'], [class*='odds'], [class*='price'], [data-odds], [class*='Odds'], button[class*='quota']",
+      "event_time": "[class*='time'], [class*='date'], [class*='ora'], time"
+    },
+    "anti_bot": {
+      "wait_before_scrape_ms": 15000,
+      "random_delay_range_ms": [
+        3000,
+        8000
+      ],
+      "stealth_mode": true,
+      "max_pages_per_session": 5,
+      "extra_settle_ms": 5000,
+      "page_wait_for_networkidle_ms": 15000
+    }
+  },
+  "eurobet": {
+    "name": "Eurobet",
+    "enabled": true,
+    "base_url": "https://www.eurobet.it",
+    "sport_paths": {
+      "calcio": "/scommesse-sportive/calcio"
+    },
+    "competition_paths": {
+      "serie-a": "/italia/serie-a",
+      "champions-league": "/champions-league",
+      "serie-b": "/italia/serie-b",
+      "premier-league": "/inghilterra/premier-league",
+      "la-liga": "/spagna/la-liga",
+      "bundesliga": "/germania/bundesliga",
+      "ligue-1": "/francia/ligue-1"
+    },
+    "strategies": [
+      "api_intercept",
+      "dom_parse"
+    ],
+    "api_patterns": [
+      "*/api/*",
+      "*/sport/*",
+      "*odds*",
+      "*event*",
+      "*match*",
+      "*quota*",
+      "*prematch*"
+    ],
+    "selectors": {
+      "event_container": "[class*='event-list'], [class*='events'], [class*='match-container']",
+      "event_row": "[class*='event'], [class*='match-row'], [data-event-id], tr[class*='event']",
+      "home_team": "[class*='home'], [class*='team1'], .home-team",
+      "away_team": "[class*='away'], [class*='team2'], .away-team",
+      "odds": "[class*='quota'], [class*='odds'], [class*='price'], [data-odds]",
+      "event_time": "[class*='time'], [class*='date'], time"
+    },
+    "anti_bot": {
+      "wait_before_scrape_ms": 12000,
+      "random_delay_range_ms": [
+        2500,
+        7000
+      ],
+      "stealth_mode": true,
+      "max_pages_per_session": 5,
+      "extra_settle_ms": 5000,
+      "page_wait_for_networkidle_ms": 15000
+    }
+  },
+  "goldbet": {
+    "name": "Goldbet",
+    "enabled": true,
+    "base_url": "https://www.goldbet.it",
+    "sport_paths": {
+      "calcio": "/scommesse"
+    },
+    "competition_paths": {
+      "serie-a": "/calcio/italia/serie-a",
+      "champions-league": "/calcio/champions-league",
+      "serie-b": "/calcio/italia/serie-b"
+    },
+    "strategies": [
+      "api_intercept",
+      "dom_parse"
+    ],
+    "api_patterns": [
+      "*/api/*",
+      "*odds*",
+      "*event*",
+      "*match*",
+      "*quota*",
+      "*sport*"
+    ],
+    "selectors": {
+      "event_container": "[class*='event'], [class*='match-list']",
+      "event_row": "[class*='event-row'], [class*='match'], [data-event-id]",
+      "home_team": "[class*='home'], [class*='team1'], [class*='team-home']",
+      "away_team": "[class*='away'], [class*='team2'], [class*='team-away']",
+      "odds": "[class*='quota'], [class*='odds'], [class*='price']",
+      "event_time": "[class*='time'], [class*='date']"
+    },
+    "anti_bot": {
+      "wait_before_scrape_ms": 12000,
+      "random_delay_range_ms": [
+        2500,
+        7000
+      ],
+      "stealth_mode": true,
+      "max_pages_per_session": 5,
+      "extra_settle_ms": 5000,
+      "page_wait_for_networkidle_ms": 15000
+    }
+  },
+  "williamhill": {
+    "name": "William Hill",
+    "enabled": true,
+    "base_url": "https://www.williamhill.it",
+    "sport_paths": {
+      "calcio": "/scommesse/calcio"
+    },
+    "competition_paths": {
+      "serie-a": "/italia/serie-a",
+      "champions-league": "/champions-league",
+      "premier-league": "/inghilterra/premier-league",
+      "la-liga": "/spagna/la-liga"
+    },
+    "strategies": [
+      "api_intercept",
+      "dom_parse"
+    ],
+    "api_patterns": [
+      "*/api/*",
+      "*/sports/*",
+      "*odds*",
+      "*event*",
+      "*match*",
+      "*market*"
+    ],
+    "selectors": {
+      "event_container": "[class*='event-list'], [class*='markets']",
+      "event_row": "[class*='event'], [class*='market-row'], [data-event]",
+      "home_team": "[class*='home'], [class*='runner-1']",
+      "away_team": "[class*='away'], [class*='runner-2']",
+      "odds": "[class*='odds'], [class*='price'], [class*='betbutton'], button[class*='odds']",
+      "event_time": "[class*='time'], [class*='date']"
+    },
+    "anti_bot": {
+      "wait_before_scrape_ms": 15000,
+      "random_delay_range_ms": [
+        3000,
+        8000
+      ],
+      "stealth_mode": true,
+      "max_pages_per_session": 3,
+      "extra_settle_ms": 5000,
+      "page_wait_for_networkidle_ms": 15000
+    }
+  },
+  "sisal": {
+    "name": "Sisal",
+    "enabled": true,
+    "base_url": "https://www.sisal.it",
+    "sport_paths": {
+      "calcio": "/scommesse-sportive/calcio"
+    },
+    "competition_paths": {
+      "serie-a": "/italia/serie-a",
+      "champions-league": "/champions-league",
+      "serie-b": "/italia/serie-b"
+    },
+    "strategies": [
+      "api_intercept",
+      "dom_parse"
+    ],
+    "api_patterns": [
+      "*/api/*",
+      "*odds*",
+      "*event*",
+      "*match*",
+      "*quota*",
+      "*sport*",
+      "*prematch*"
+    ],
+    "selectors": {
+      "event_container": "[class*='event'], [class*='match-list']",
+      "event_row": "[class*='event-row'], [class*='match'], [data-event-id]",
+      "home_team": "[class*='home'], [class*='team1']",
+      "away_team": "[class*='away'], [class*='team2']",
+      "odds": "[class*='quota'], [class*='odds'], [class*='price']",
+      "event_time": "[class*='time'], [class*='date']"
+    },
+    "anti_bot": {
+      "wait_before_scrape_ms": 12000,
+      "random_delay_range_ms": [
+        2500,
+        7000
+      ],
+      "stealth_mode": true,
+      "max_pages_per_session": 5,
+      "extra_settle_ms": 5000,
+      "page_wait_for_networkidle_ms": 15000
+    }
+  },
+  "lottomatica": {
+    "name": "Lottomatica",
+    "enabled": true,
+    "base_url": "https://www.lottomatica.it",
+    "sport_paths": {
+      "calcio": "/scommesse/calcio"
+    },
+    "competition_paths": {
+      "serie-a": "/italia/serie-a",
+      "champions-league": "/champions-league"
+    },
+    "strategies": [
+      "api_intercept",
+      "dom_parse"
+    ],
+    "api_patterns": [
+      "*/api/*",
+      "*odds*",
+      "*event*",
+      "*match*",
+      "*quota*",
+      "*sport*"
+    ],
+    "selectors": {
+      "event_container": "[class*='event'], [class*='match']",
+      "event_row": "[class*='event-row'], [class*='match-row'], [data-event-id]",
+      "home_team": "[class*='home'], [class*='team1']",
+      "away_team": "[class*='away'], [class*='team2']",
+      "odds": "[class*='quota'], [class*='odds'], [class*='price']",
+      "event_time": "[class*='time'], [class*='date']"
+    },
+    "anti_bot": {
+      "wait_before_scrape_ms": 12000,
+      "random_delay_range_ms": [
+        2500,
+        7000
+      ],
+      "stealth_mode": true,
+      "max_pages_per_session": 5,
+      "extra_settle_ms": 5000,
+      "page_wait_for_networkidle_ms": 15000
+    }
+  },
+  "bet365": {
+    "name": "Bet365",
+    "enabled": true,
+    "base_url": "https://www.bet365.it",
+    "sport_paths": {
+      "calcio": "/#/AC/B1/C1/D13/E51761579/F2/"
+    },
+    "competition_paths": {},
+    "strategies": [
+      "api_intercept",
+      "websocket",
+      "dom_parse"
+    ],
+    "api_patterns": [
+      "*/SportsBook/*",
+      "*/prematch/*",
+      "*/default/sport*",
+      "*InPlayModule*",
+      "*odds*"
+    ],
+    "selectors": {
+      "event_container": "[class*='event'], [class*='fixture']",
+      "event_row": "[class*='event-row'], [class*='fixture-row'], [class*='sl-MarketCouponFixture']",
+      "home_team": "[class*='home'], [class*='team-home'], [class*='sl-CouponParticipantWithBookCloses_Name']",
+      "away_team": "[class*='away'], [class*='team-away'], [class*='sl-CouponParticipantWithBookCloses_Name']",
+      "odds": "[class*='odds'], [class*='price'], [class*='sl-CouponParticipantOdds']",
+      "event_time": "[class*='time'], [class*='date']"
+    },
+    "anti_bot": {
+      "wait_before_scrape_ms": 20000,
+      "random_delay_range_ms": [
+        5000,
+        10000
+      ],
+      "stealth_mode": true,
+      "max_pages_per_session": 2,
+      "ws_wait_ms": 25000,
+      "notes": "Bet365 uses heavy anti-bot: TLS fingerprinting, sticky sessions, datacenter IP blocking. WebSocket uses zap-protocol-v1 with F (snapshot) and U (delta) messages.",
+      "extra_settle_ms": 5000,
+      "page_wait_for_networkidle_ms": 15000
+    }
+  },
+  "oddsportal": {
+    "name": "OddsPortal",
+    "enabled": true,
+    "base_url": "https://www.oddsportal.com",
+    "sport_paths": {
+      "calcio": "/football"
+    },
+    "competition_paths": {
+      "serie-a": "/italy/serie-a/",
+      "champions-league": "/europe/champions-league/",
+      "serie-b": "/italy/serie-b/",
+      "premier-league": "/england/premier-league/",
+      "la-liga": "/spain/laliga/",
+      "bundesliga": "/germany/bundesliga/",
+      "ligue-1": "/france/ligue-1/",
+      "europa-league": "/europe/europa-league/"
+    },
+    "strategies": [
+      "api_intercept",
+      "dom_parse"
+    ],
+    "api_patterns": [
+      "*/ajax-sport-country-tournament*",
+      "*/match*",
+      "*feed*",
+      "*odds*",
+      "*data*"
+    ],
+    "selectors": {
+      "event_container": "table.table-main, [class*='eventRow'], div[class*='tournamentTable']",
+      "event_row": "tr.deactivate, tr[class*='event'], [class*='eventRow'], div[class*='match-row']",
+      "home_team": "td.name .home-od, [class*='homeTeam'], a[class*='participant-name']:first-child",
+      "away_team": "td.name .away-od, [class*='awayTeam'], a[class*='participant-name']:last-child",
+      "odds": "td.odds-nowrp, [class*='odds-value'], [class*='oddsCell']",
+      "event_time": "td.table-time, [class*='event-time']",
+      "bookmaker_name": "a.name2"
+    },
+    "anti_bot": {
+      "wait_before_scrape_ms": 8000,
+      "random_delay_range_ms": [
+        2000,
+        5000
+      ],
+      "stealth_mode": true,
+      "max_pages_per_session": 10,
+      "extra_settle_ms": 5000,
+      "page_wait_for_networkidle_ms": 15000
+    },
+    "notes": "Aggregator site. Shows odds from multiple bookmakers on a single page. Best used for comparison."
+  }
+}

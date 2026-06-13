@@ -1,0 +1,36 @@
+name: winbet
+version: 1.0.0
+description: "WinBet Hermes Agent — autonomous Italian football betting odds analyst. Scrapes authorized bookmakers, detects surebets and odds variations, sends real-time alerts and periodic reports via Telegram."
+hermes_requires: ">=0.12.0"
+author: "prof1980"
+license: "MIT"
+homepage: "https://github.com/prof1980/winbet-hermes-profile"
+
+# Italian-language odds analyst. Termini tecnici sulle quote restano in inglese
+# (over/under, handicap, 1X2, ecc.).
+env_requires:
+  - name: TELEGRAM_BOT_TOKEN
+    description: "Telegram bot token (from @BotFather). Required for sending alerts and reports."
+    required: true
+  - name: TELEGRAM_ALLOWED_USERS
+    description: "Comma-separated Telegram user IDs allowed to interact with the agent."
+    required: true
+  - name: OLLAMA_API_KEY
+    description: "Ollama Cloud API key (used as model backend via OpenAI-compatible endpoint)."
+    required: true
+  - name: OLLAMA_BASE_URL
+    description: "Ollama Cloud base URL. Default: http://host.docker.internal:11434/v1"
+    required: false
+    default: "http://host.docker.internal:11434/v1"
+  - name: THE_ODDS_API_KEY
+    description: "The Odds API key for cross-bookmaker odds aggregation. Optional but recommended for production scraping."
+    required: false
+    default: ""
+  - name: LIBERO_SMTP_USER
+    description: "Libero.it (or any IMAP/SMTP provider) username for email alerts."
+    required: false
+    default: ""
+  - name: LIBERO_SMTP_PASS
+    description: "Libero.it (or any IMAP/SMTP provider) password for email alerts."
+    required: false
+    default: ""

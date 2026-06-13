@@ -1,0 +1,35 @@
+{
+  "_comment_purpose": "Scheduled tasks distributed with the WinBet profile. The 'jobs' array is read by `hermes cron install` to seed the user's cron scheduler on first install. User-owned cron jobs (created via `/cron create` after install) are NOT touched by updates — they live in the user's `~/.hermes/profiles/winbet/cron/jobs.json` runtime store, separate from this distribution manifest.",
+  "_comment_naming": "File name pattern: <frequency>-<purpose>.json. Examples: 'hourly-odds-scrape.json', 'daily-surebet-report.json', 'weekly-digest.json'.",
+  "version": 1,
+  "jobs": [
+    {
+      "id": "hourly-odds-scrape",
+      "name": "WinBet — Hourly odds scrape",
+      "_comment": "Placeholder. To activate: fill in the script path, add real API keys to .env (THE_ODDS_API_KEY, SNAI cookies, etc.), then run `hermes cron install jobs/hourly-odds-scrape.json`.",
+      "enabled": false,
+      "schedule": "0 * * * *",
+      "prompt": "Run the WinBet bookmaker odds scraper. Pull fresh odds from the enabled bookmakers (configured in /opt/data/winbet-agent/winbet_config.json), normalize the data, write to the production SQLite DB, and append a summary of variations >5% to /opt/data/winbet-agent/reports/scrape_<YYYY-MM-DD>.md. If the scraper fails, send a Telegram alert with the error to the configured chat_id and exit non-zero.",
+      "skills": ["bookmaker-odds-scraper", "dedupe-matches-merge"],
+      "model": "",
+      "provider": "",
+      "workdir": "/opt/data/winbet-agent",
+      "deliver": "telegram:8548374872",
+      "no_agent": false
+    },
+    {
+      "id": "daily-surebet-report",
+      "name": "WinBet — Daily surebet report (08:00 Europe/Rome)",
+      "_comment": "Sends a daily HTML+plaintext digest of identified surebets and significant odds movements to the user's email and Telegram at 08:00 local time.",
+      "enabled": false,
+      "schedule": "0 8 * * *",
+      "prompt": "Generate the daily WinBet digest. Query the production DB for surebets identified in the last 24h, format the top 10 by expected value as an HTML report, and send via email (Libero SMTP) and Telegram. Subject: 'WinBet Daily Digest - <date>'. Include a 1-paragraph Italian summary and a markdown table of the top surebets with bookmaker, profit %, and stake recommendation. If no surebets were found, send a 'no opportunities' message instead.",
+      "skills": ["libero-email-notifier", "dedupe-matches-merge"],
+      "model": "",
+      "provider": "",
+      "workdir": "/opt/data/winbet-agent",
+      "deliver": "email,telegram:8548374872",
+      "no_agent": false
+    }
+  ]
+}

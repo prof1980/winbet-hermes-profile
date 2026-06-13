@@ -1,0 +1,5 @@
+{
+  "$schema": "https://hermes-agent.nousresearch.com/schemas/mcp.json",
+  "_comment": "WinBet distribution declares NO external MCP servers. Hermes core toolsets (web, file, terminal, browser, cronjob, delegation) cover all WinBet use cases. Add entries here if a future WinBet version needs MCP-bridged services (e.g. a remote bookmaker odds API).",
+  "mcp_servers": {}
+}

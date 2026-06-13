@@ -80,8 +80,12 @@ yarn-error.log
 Thumbs.db
 
 # --- Cron runtime ---
+# cron/jobs.json IS distribution-owned and MUST be committed (it's the
+# schedule manifest the installer reads). Only runtime artifacts are excluded.
 cron/.tick.lock
 cron/output/
+cron/jobs.json.local        # user-personal job overrides (if any)
+cron/state.json             # last-run timestamps, history (regenerated)
 
 # --- Pastes (input utente, transienti) ---
 pastes/

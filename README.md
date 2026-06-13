@@ -40,14 +40,17 @@ Vedi [`SOUL.md`](SOUL.md) per il testo completo.
 
 ```
 .
-├── distribution.yaml     # manifest installabile (env_requires, version, ecc.)
+├── distribution.yaml     # manifest installabile (env_requires, version, distribution_owned)
 ├── SOUL.md               # personalità agente
 ├── profile.yaml          # descrizione profilo (mostrata in `hermes profile list`)
-├── config.yaml           # config Hermes (modello, toolset, terminal, memory, ...)
-├── .gitignore            # esclude secrets, state, cache, logs
+├── config.yaml           # config Hermes (modello, toolset, terminal, memory, ...) — preserved on update
+├── mcp.json              # MCP server connections (vuoto = nessun MCP esterno)
+├── cron/
+│   └── jobs.json         # schedule template (hourly scrape, daily digest)
 ├── skills/               # 22 categorie, ~71 SKILL.md (auto-caricate)
-├── memories/             # vuoto — popolato al primo uso
-├── cron/                 # vuoto — popolato al primo setup scraping
+├── .gitignore            # esclude secrets, state, cache, logs, runtime locks
+├── CHANGELOG.md
+├── LICENSE               # MIT
 └── README.md
 ```
 
@@ -89,6 +92,7 @@ hermes profile use winbet
 
 ## Note sull'uso
 
+- **Aggiornamento distribuzione**: i file marcati come `distribution_owned` in `distribution.yaml` (SOUL.md, config.yaml, mcp.json, skills/ WinBet, cron/jobs.json) vengono **sostituiti** al `hermes profile update`. I dati utente (`memories/`, `sessions/`, `state.db`, `auth.json`, `.env`, `logs/`, `workspace/`, ecc.) sono **preservati**. Per forzare l'override di `config.yaml` usa `hermes profile update --force-config`.
 - **Gioco responsabile**: questo agente analizza quote a scopo informativo. Non è un consulente finanziario né un servizio di consulenza scommesse.
 - **Costi LLM**: il modello default (`minimax-m3:cloud` via Ollama) ha contesto 524k token. Sessioni lunghe vengono compresse automaticamente (soglia 50% → 20%).
 - **Scraping**: la skill `bookmaker-odds-scraper` lavora senza autenticazione su SNAI, Eurobet, Goldbet, William Hill, Sisal, Lottomatica, Bet365, OddsPortal. Rispettare i ToS dei siti.

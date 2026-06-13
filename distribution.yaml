@@ -1,10 +1,45 @@
 name: winbet
-version: 1.0.0
+version: 1.0.1
 description: "WinBet Hermes Agent — autonomous Italian football betting odds analyst. Scrapes authorized bookmakers, detects surebets and odds variations, sends real-time alerts and periodic reports via Telegram."
 hermes_requires: ">=0.12.0"
 author: "prof1980"
 license: "MIT"
 homepage: "https://github.com/prof1980/winbet-hermes-profile"
+
+# ============================================================
+# Distribution-owned vs user-owned (governs what `hermes profile update`
+# replaces vs preserves on the installer's machine)
+# ============================================================
+# Defaults (when this block is omitted): SOUL.md, config.yaml, mcp.json,
+# skills/, cron/, distribution.yaml are distribution-owned and replaced on
+# update. memories/, sessions/, state.db*, auth.json, .env, logs/,
+# workspace/, plans/, home/, *_cache/, local/ are user-owned and preserved.
+#
+# Below we override the defaults for two reasons:
+#   1. config.yaml is "distribution-owned" per the default, but the
+#      framework preserves it on update anyway (installer may have tuned
+#      model/provider). We add it here to be EXPLICIT about that intent.
+#      Pass --force-config on update to actually overwrite it.
+#   2. profile.yaml, CHANGELOG.md, LICENSE, README.md are author-side
+#      files that should follow the repo state, not be frozen at install.
+#   3. We list specific skills/ subtrees that ARE distribution-owned
+#      (WinBet-specific) vs the ones we expect the user to manage locally
+#      (bundled core skills re-pulled on /reload-skills).
+distribution_owned:
+  - distribution.yaml
+  - SOUL.md
+  - profile.yaml
+  - mcp.json
+  - config.yaml              # preserved by default; --force-config to reset
+  - CHANGELOG.md
+  - LICENSE
+  - README.md
+  - skills/bookmaker-odds-scraper/
+  - skills/dedupe-matches-merge/
+  - skills/libero-email-notifier/
+  - skills/github-push-with-pat-from-env/
+  - skills/python-project-replication-package/
+  - cron/jobs.json           # distributed schedule templates (user jobs not touched)
 
 # Italian-language odds analyst. Termini tecnici sulle quote restano in inglese
 # (over/under, handicap, 1X2, ecc.).
